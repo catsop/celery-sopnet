@@ -9,5 +9,8 @@ setup(name='Celery-sopnet',
       author_email='tom@voodoo-arts.net',
       url='https://github.com/catsop/celery-sopnet',
       packages=['celerysopnet'],
-      requires=['celery'],
-     )
+      install_requires=['celery', 'pysopnet'],
+      dependency_links=[
+        "git+https://github.com/catsop/python-sopnet.git#egg=pysopnet-0.1",
+      ],
+)
