@@ -13,7 +13,14 @@ class SliceGuarantorParameters:
     """
     This is a mock-up of pysopnet's SliceGuarantorParameters class.
     """
-    pass
+    def __init__(self):
+        self.max_slice_size = 0
+
+    def getMaxSliceSize(self):
+        return self.max_slice_size
+
+    def setMaxSliceSize(self, new_size):
+        self.max_slice_size = new_size
 
 class SegmentGuarantorParameters:
     """
