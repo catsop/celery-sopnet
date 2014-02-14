@@ -25,7 +25,21 @@ class ProjectConfiguration:
     """
     This is a mock-up of pysopnet's ProjectConfiguration class.
     """
-    pass
+    def __init__(self):
+        self.block_size = point3(0, 0 ,0)
+        self.django_url = ""
+
+    def getBlockSize(self):
+        return self.block_size
+
+    def setBlockSize(self, new_size):
+        self.block_size = new_size
+
+    def getDjangoUrl(self):
+        return self.django_url
+
+    def setDjangoUrl(self, new_url):
+        self.django_url = new_url
 
 class SliceGuarantor:
     """
