@@ -4,18 +4,8 @@ from celery import chord
 
 from celerysopnet.celery import app
 
-import pysopnet as ps
-
-from random import randint
-
-def call_segment_guarantor():
-    """
-    This is for now a mock-up which randomly returns required slices.
-    """
-    required_slices = [ps.point3(randint(0,10), randint(0,10), randint(0,10)) \
-            for i in range(randint(0,3))]
-
-    return required_slices
+import celerysopnet.mockups as ps
+#import pysopnet as ps
 
 @app.task
 def SliceGuarantorTask(x, y, z):
@@ -23,10 +13,14 @@ def SliceGuarantorTask(x, y, z):
     Calls SliceGuarantor for a certain block. This task cannot fail (as long as
     there is enough space for the results).
     """
+    location = ps.point3(x, y, z)
+    params = ps.SliceGuarantorParameters()
+    config = ps.ProjectConfiguration()
+    result = ps.SliceGuarantor().fill(location, params, config)
     return "Created slice for (%s, %s, %s) (dummy)" % (x, y, z)
 
 @app.task
-def SegmentGuarantorTask():
+def SegmentGuarantorTask(x, y, z):
     """
     Calls SegmentGuarantor for a certain block. If Sopnet returns with a
     non-empty list, slices are missing for the segment to be generated. In this
@@ -35,7 +29,10 @@ def SegmentGuarantorTask():
     slices are available.
     """
     # Ask Sopnet for requested segment
-    required_slices = call_segment_guarantor()
+    location = ps.point3(x, y, z)
+    params = ps.SegmentGuarantorParameters()
+    config = ps.ProjectConfiguration()
+    required_slices = ps.SegmentGuarantor().fill(location, params, config)
 
     # Fulfill preconditions, if any, before creating the segment
     if required_slices:
@@ -44,7 +41,7 @@ def SegmentGuarantorTask():
               for rs in required_slices]
         # Run a celery chain that re-executes the slice guarantor request after
         # the preconditions are met.
-        callback = SegmentGuarantorTask.si()
+        callback = SegmentGuarantorTask.si(location, params, config)
         result = chord(preconditions)(callback)
         return "Queued %s new slice guarantor tasks and new segment " \
                 "guarantor task: %s (dummy)" % (len(preconditions), result.task_id)
