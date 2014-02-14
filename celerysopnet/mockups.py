@@ -28,6 +28,12 @@ class SegmentGuarantorParameters:
     """
     pass
 
+class SolutionGuarantorParameters:
+    """
+    This is a mock-up of pysopnet's SolutionGuarantorParameters class.
+    """
+    pass
+
 class ProjectConfiguration:
     """
     This is a mock-up of pysopnet's ProjectConfiguration class.
@@ -66,3 +72,15 @@ class SegmentGuarantor:
                 point3(randint(0,10), randint(0,10), randint(0,10)) \
                 for i in range(randint(0,3))]
         return required_slices
+
+class SolutionGuarantor:
+    """
+    This is a mock-up of pysopnet's SolutionGuarantor class. It doesn't actually
+    create data. It returns a randomly created list of required segments
+    (between and including zero and three).
+    """
+    def fill(self, location, params, config):
+        required_segments = [
+                point3(randint(0,10), randint(0,10), randint(0,10)) \
+                for i in range(randint(0,3))]
+        return required_segments

@@ -49,11 +49,29 @@ def SegmentGuarantorTask(x, y, z):
         return "Created segment (dummy)"
 
 @app.task
-def SolutionGuarantorTask():
+def SolutionGuarantorTask(x, y, z):
     """
     Calls SolutionGuarantor for a certain core.
     """
-    return "Called solution guarantor (dummy)"
+    # Ask Sopnet for requested solution
+    location = ps.point3(x, y, z)
+    params = ps.SolutionGuarantorParameters()
+    config = ps.ProjectConfiguration()
+    required_segments = ps.SolutionGuarantor().fill(location, params, config)
+
+    # Fulfill preconditions, if any, before creating the segment
+    if required_segments:
+        # Create slice guarantor tasks for required slices
+        preconditions = [SegmentGuarantorTask.s(rs.x, rs.y, rs.z) \
+              for rs in required_segments]
+        # Run a celery chain that re-executes the slice guarantor request after
+        # the preconditions are met.
+        callback = SolutionGuarantorTask.si(location, params, config)
+        result = chord(preconditions)(callback)
+        return "Queued %s new segment guarantor tasks and a new solution " \
+                "guarantor task: %s (dummy)" % (len(preconditions), result.task_id)
+    else:
+        return "Created solution (dummy)"
 
 @app.task
 def SolveSubvolumeTask():
