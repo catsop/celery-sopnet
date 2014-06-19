@@ -17,8 +17,8 @@ def SliceGuarantorTask(config, x, y, z):
     z = int(z)
     location = ps.point3(x, y, z)
     params = ps.SliceGuarantorParameters()
-    config = create_project_config(config)
-    result = ps.SliceGuarantor().fill(location, params, config)
+    pconfig = create_project_config(config)
+    result = ps.SliceGuarantor().fill(location, params, pconfig)
     return "Created slice for (%s, %s, %s)" % (x, y, z)
 
 @app.task
@@ -36,13 +36,13 @@ def SegmentGuarantorTask(config, x, y, z):
     # Ask Sopnet for requested segment
     location = ps.point3(x, y, z)
     params = ps.SegmentGuarantorParameters()
-    config = create_project_config(config)
-    required_slices = ps.SegmentGuarantor().fill(location, params, config)
+    pconfig = create_project_config(config)
+    required_slices = ps.SegmentGuarantor().fill(location, params, pconfig)
 
     # Fulfill preconditions, if any, before creating the segment
     if required_slices:
         # Create slice guarantor tasks for required slices
-        preconditions = [SliceGuarantorTask.s(rs.x, rs.y, rs.z) \
+        preconditions = [SliceGuarantorTask.s(config, rs.x, rs.y, rs.z) \
               for rs in required_slices]
         # Run a celery chain that re-executes the slice guarantor request after
         # the preconditions are met.
@@ -64,8 +64,8 @@ def SolutionGuarantorTask(config, x, y, z):
     # Ask Sopnet for requested solution
     location = ps.point3(x, y, z)
     params = ps.SolutionGuarantorParameters()
-    config = create_project_config(config)
-    required_segments = ps.SolutionGuarantor().fill(location, params, config)
+    pconfig = create_project_config(config)
+    required_segments = ps.SolutionGuarantor().fill(location, params, pconfig)
 
     # Fulfill preconditions, if any, before creating the segment
     if required_segments:
