@@ -7,6 +7,14 @@ from celerysopnet.celery import app
 import celerysopnet.mockups as ps
 #import pysopnet as ps
 
+def create_project_config():
+    """
+    This is merely a wrapper for the actual implementation of the project
+    configuration. It is used to be able to switch the implementation without
+    requiring the client to know.
+    """
+    return ps.ProjectConfiguration()
+
 @app.task
 def SliceGuarantorTask(config, x, y, z):
     """
