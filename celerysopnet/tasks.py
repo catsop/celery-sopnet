@@ -120,9 +120,13 @@ def create_project_config(config):
     if catmaid_host:
         pc.setCatmaidHost(catmaid_host)
 
-    catmaid_stack_id = config.get('catmaid_stack_id')
-    if catmaid_stack_id:
-        pc.setCatmaidStackId(int(catmaid_stack_id))
+    catmaid_raw_stack_id = config.get('catmaid_raw_stack_id')
+    if catmaid_raw_stack_id:
+        pc.setCatmaidRawStackId(int(catmaid_raw_stack_id))
+
+    catmaid_mem_stack_id = config.get('catmaid_membrane_stack_id')
+    if catmaid_mem_stack_id:
+        pc.setCatmaidMembraneStackId(int(catmaid_mem_stack_id))
 
     catmaid_project_id = config.get('catmaid_project_id')
     if catmaid_project_id:
