@@ -101,8 +101,7 @@ def create_project_config(config):
     dictinary can have the following keys and values:
 
         backend_type = [local|django]
-        django_url = [CATMAID's relative URL]
-        catmaid_host = [Host server of CATMAID]
+        catmaid_host = [Host:port of CATMAID]
         catmaid_stack_id = [ID of the CATMAID stack in question]
         catmaid_project_id = [ID of the CATMAID project in question]
         block_size = [3 element array for the block size]
@@ -116,10 +115,6 @@ def create_project_config(config):
         pc.setBackendType(ps.BackendType.Django)
     else:
         pc.setBackendType(ps.BackendType.Local)
-
-    django_url = config.get('django_url')
-    if django_url:
-        pc.setDjangoUrl(django_url)
 
     catmaid_host = config.get('catmaid_host')
     if catmaid_host:
