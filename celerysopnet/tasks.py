@@ -12,6 +12,7 @@ def SliceGuarantorTask(config, x, y, z):
     Calls SliceGuarantor for a certain block. This task cannot fail (as long as
     there is enough space for the results).
     """
+    ps.setLogLevel(4)
     x = int(x)
     y = int(y)
     z = int(z)
