@@ -4,8 +4,7 @@ from celery import chord
 
 from celerysopnet.celery import app
 
-import celerysopnet.mockups as ps
-#import pysopnet as ps
+import pysopnet as ps
 
 def create_project_config():
     """
@@ -24,7 +23,7 @@ def SliceGuarantorTask(config, x, y, z):
     location = ps.point3(x, y, z)
     params = ps.SliceGuarantorParameters()
     result = ps.SliceGuarantor().fill(location, params, config)
-    return "Created slice for (%s, %s, %s) (dummy)" % (x, y, z)
+    return "Created slice for (%s, %s, %s)" % (x, y, z)
 
 @app.task
 def SegmentGuarantorTask(config, x, y, z):
@@ -50,9 +49,9 @@ def SegmentGuarantorTask(config, x, y, z):
         callback = SegmentGuarantorTask.si(config, x, y ,z)
         result = chord(preconditions)(callback)
         return "Queued %s new slice guarantor tasks and new segment " \
-                "guarantor task: %s (dummy)" % (len(preconditions), result.task_id)
+                "guarantor task: %s" % (len(preconditions), result.task_id)
     else:
-        return "Created segment (dummy)"
+        return "Created segment"
 
 @app.task
 def SolutionGuarantorTask(config, x, y, z):
@@ -74,20 +73,20 @@ def SolutionGuarantorTask(config, x, y, z):
         callback = SolutionGuarantorTask.si(config, x, y, z)
         result = chord(preconditions)(callback)
         return "Queued %s new segment guarantor tasks and a new solution " \
-                "guarantor task: %s (dummy)" % (len(preconditions), result.task_id)
+                "guarantor task: %s" % (len(preconditions), result.task_id)
     else:
-        return "Created solution (dummy)"
+        return "Created solution"
 
 @app.task
 def SolveSubvolumeTask():
     """
     Calls SolutionGuarantorTask for all cores in a subvolume.
     """
-    return "Called solution guarantor task for all cores (dummy)"
+    return "Called solution guarantor task for all cores"
 
 @app.task
 def TraceNeuronTask():
     """
     Actively follows the cores of a neuron around a requested point.
     """
-    return "Finished tracing neuron (dummy)"
+    return "Finished tracing neuron"
