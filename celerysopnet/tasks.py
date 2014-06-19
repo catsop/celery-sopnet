@@ -113,9 +113,9 @@ def create_project_config(config):
 
     backend_type = config.get('backend_type', 'local')
     if backend_type == 'django':
-        ps.setBackendType(ps.BackendType.Django)
+        pc.setBackendType(ps.BackendType.Django)
     else:
-        ps.setBackendType(ps.BackendType.Local)
+        pc.setBackendType(ps.BackendType.Local)
 
     django_url = config.get('django_url')
     if django_url:
