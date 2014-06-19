@@ -8,19 +8,18 @@ import celerysopnet.mockups as ps
 #import pysopnet as ps
 
 @app.task
-def SliceGuarantorTask(x, y, z):
+def SliceGuarantorTask(config, x, y, z):
     """
     Calls SliceGuarantor for a certain block. This task cannot fail (as long as
     there is enough space for the results).
     """
     location = ps.point3(x, y, z)
     params = ps.SliceGuarantorParameters()
-    config = ps.ProjectConfiguration()
     result = ps.SliceGuarantor().fill(location, params, config)
     return "Created slice for (%s, %s, %s) (dummy)" % (x, y, z)
 
 @app.task
-def SegmentGuarantorTask(x, y, z):
+def SegmentGuarantorTask(config, x, y, z):
     """
     Calls SegmentGuarantor for a certain block. If Sopnet returns with a
     non-empty list, slices are missing for the segment to be generated. In this
@@ -31,7 +30,6 @@ def SegmentGuarantorTask(x, y, z):
     # Ask Sopnet for requested segment
     location = ps.point3(x, y, z)
     params = ps.SegmentGuarantorParameters()
-    config = ps.ProjectConfiguration()
     required_slices = ps.SegmentGuarantor().fill(location, params, config)
 
     # Fulfill preconditions, if any, before creating the segment
@@ -49,20 +47,19 @@ def SegmentGuarantorTask(x, y, z):
         return "Created segment (dummy)"
 
 @app.task
-def SolutionGuarantorTask(x, y, z):
+def SolutionGuarantorTask(config, x, y, z):
     """
     Calls SolutionGuarantor for a certain core.
     """
     # Ask Sopnet for requested solution
     location = ps.point3(x, y, z)
     params = ps.SolutionGuarantorParameters()
-    config = ps.ProjectConfiguration()
     required_segments = ps.SolutionGuarantor().fill(location, params, config)
 
     # Fulfill preconditions, if any, before creating the segment
     if required_segments:
         # Create slice guarantor tasks for required slices
-        preconditions = [SegmentGuarantorTask.s(rs.x, rs.y, rs.z) \
+        preconditions = [SegmentGuarantorTask.s(config, rs.x, rs.y, rs.z) \
               for rs in required_segments]
         # Run a celery chain that re-executes the slice guarantor request after
         # the preconditions are met.
