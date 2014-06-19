@@ -12,6 +12,9 @@ def SliceGuarantorTask(config, x, y, z):
     Calls SliceGuarantor for a certain block. This task cannot fail (as long as
     there is enough space for the results).
     """
+    x = int(x)
+    y = int(y)
+    z = int(z)
     location = ps.point3(x, y, z)
     params = ps.SliceGuarantorParameters()
     config = create_project_config(config)
@@ -27,6 +30,9 @@ def SegmentGuarantorTask(config, x, y, z):
     slices. It re-queues itself after them. It thereby makes sure all required
     slices are available.
     """
+    x = int(x)
+    y = int(y)
+    z = int(z)
     # Ask Sopnet for requested segment
     location = ps.point3(x, y, z)
     params = ps.SegmentGuarantorParameters()
@@ -52,6 +58,9 @@ def SolutionGuarantorTask(config, x, y, z):
     """
     Calls SolutionGuarantor for a certain core.
     """
+    x = int(x)
+    y = int(y)
+    z = int(z)
     # Ask Sopnet for requested solution
     location = ps.point3(x, y, z)
     params = ps.SolutionGuarantorParameters()
