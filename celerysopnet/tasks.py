@@ -6,14 +6,6 @@ from celerysopnet.celery import app
 
 import pysopnet as ps
 
-def create_project_config():
-    """
-    This is merely a wrapper for the actual implementation of the project
-    configuration. It is used to be able to switch the implementation without
-    requiring the client to know.
-    """
-    return ps.ProjectConfiguration()
-
 @app.task
 def SliceGuarantorTask(config, x, y, z):
     """
@@ -22,6 +14,7 @@ def SliceGuarantorTask(config, x, y, z):
     """
     location = ps.point3(x, y, z)
     params = ps.SliceGuarantorParameters()
+    config = create_project_config(config)
     result = ps.SliceGuarantor().fill(location, params, config)
     return "Created slice for (%s, %s, %s)" % (x, y, z)
 
@@ -37,6 +30,7 @@ def SegmentGuarantorTask(config, x, y, z):
     # Ask Sopnet for requested segment
     location = ps.point3(x, y, z)
     params = ps.SegmentGuarantorParameters()
+    config = create_project_config(config)
     required_slices = ps.SegmentGuarantor().fill(location, params, config)
 
     # Fulfill preconditions, if any, before creating the segment
@@ -61,6 +55,7 @@ def SolutionGuarantorTask(config, x, y, z):
     # Ask Sopnet for requested solution
     location = ps.point3(x, y, z)
     params = ps.SolutionGuarantorParameters()
+    config = create_project_config(config)
     required_segments = ps.SolutionGuarantor().fill(location, params, config)
 
     # Fulfill preconditions, if any, before creating the segment
@@ -90,3 +85,55 @@ def TraceNeuronTask():
     Actively follows the cores of a neuron around a requested point.
     """
     return "Finished tracing neuron"
+
+def create_project_config(config):
+    """
+    This takes any dictionary and creates a real project configuration. This
+    dictinary can have the following keys and values:
+
+        backend_type = [local|django]
+        django_url = [CATMAID's relative URL]
+        catmaid_host = [Host server of CATMAID]
+        catmaid_stack_id = [ID of the CATMAID stack in question]
+        catmaid_project_id = [ID of the CATMAID project in question]
+        block_size = [3 element array for the block size]
+        volume_size = [3 element array for the volume size]
+        core_size = [3 element array for the core size]
+    """
+    pc = ps.ProjectConfiguration()
+
+    backend_type = config.get('backend_type', 'local')
+    if backend_type == 'django':
+        ps.setBackendType(ps.BackendType.Django)
+    else:
+        ps.setBackendType(ps.BackendType.Local)
+
+    django_url = config.get('django_url')
+    if django_url:
+        pc.setDjangoUrl(django_url)
+
+    catmaid_host = config.get('catmaid_host')
+    if catmaid_host:
+        pc.setCatmaidHost(catmaid_host)
+
+    catmaid_stack_id = config.get('catmaid_stack_id')
+    if catmaid_stack_id:
+        pc.setCatmaidStackId(int(catmaid_stack_id))
+
+    catmaid_project_id = config.get('catmaid_project_id')
+    if catmaid_project_id:
+        pc.setCatmaidProjectId(int(catmaid_project_id))
+
+    block_size = config.get('block_size')
+    if block_size:
+        pc.setBlockSize(ps.point3(block_size[0], block_size[1], block_size[2]))
+
+    volume_size = config.get('volume_size')
+    if volume_size:
+        pc.setVolumeSize(ps.point3(volume_size[0], volume_size[1], volume_size[2]))
+
+    core_size = config.get('core_size')
+    if core_size:
+        pc.setCoreSize(ps.point3(core_size[0], core_size[1], core_size[2]))
+
+    return pc
