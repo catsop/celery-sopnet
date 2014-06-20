@@ -46,14 +46,18 @@ def SegmentGuarantorTask(config, x, y, z):
         # Create slice guarantor tasks for required slices
         preconditions = [SliceGuarantorTask.s(config, rs.x, rs.y, rs.z) \
               for rs in required_slices]
+        # Create a list of the precdonditions' coordinats
+        precondition_coords = ["(%s, %s, %s)" % (rs.x, rs.y, rs.z) \
+              for rs in required_slices]
         # Run a celery chain that re-executes the slice guarantor request after
         # the preconditions are met.
         callback = SegmentGuarantorTask.si(config, x, y ,z)
         result = chord(preconditions)(callback)
         return "Queued %s new slice guarantor tasks and new segment " \
-                "guarantor task: %s" % (len(preconditions), result.task_id)
+                "guarantor task: %s [Positions: %s]" % (len(preconditions), \
+                result.task_id, ", ".join(precondition_coords))
     else:
-        return "Created segment"
+        return "Created segment for (%s, %s, %s)" % (x, y, z)
 
 @app.task
 def SolutionGuarantorTask(config, x, y, z):
