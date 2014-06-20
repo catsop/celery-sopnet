@@ -53,9 +53,8 @@ def SegmentGuarantorTask(config, x, y, z):
         # the preconditions are met.
         callback = SegmentGuarantorTask.si(config, x, y ,z)
         result = chord(preconditions)(callback)
-        return "Queued %s new slice guarantor tasks and new segment " \
-                "guarantor task: %s [Positions: %s]" % (len(preconditions), \
-                result.task_id, ", ".join(precondition_coords))
+        return "Queued slice guarantor tasks for positions: %s Chain ID: %s" \
+                % (", ".join(precondition_coords), result.task_id)
     else:
         return "Created segment for (%s, %s, %s)" % (x, y, z)
 
