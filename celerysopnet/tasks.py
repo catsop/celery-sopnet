@@ -19,7 +19,7 @@ def SliceGuarantorTask(config, x, y, z):
     location = ps.point3(x, y, z)
     params = ps.SliceGuarantorParameters()
     pconfig = create_project_config(config)
-    result = ps.SliceGuarantor().fill(location, params, pconfig)
+    ps.SliceGuarantor().fill(location, params, pconfig)
     return "Created slice for (%s, %s, %s)" % (x, y, z)
 
 @app.task
