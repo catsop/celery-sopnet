@@ -31,6 +31,7 @@ def SegmentGuarantorTask(config, x, y, z):
     slices. It re-queues itself after them. It thereby makes sure all required
     slices are available.
     """
+    ps.setLogLevel(3)
     x = int(x)
     y = int(y)
     z = int(z)
@@ -59,6 +60,7 @@ def SolutionGuarantorTask(config, x, y, z):
     """
     Calls SolutionGuarantor for a certain core.
     """
+    ps.setLogLevel(3)
     x = int(x)
     y = int(y)
     z = int(z)
