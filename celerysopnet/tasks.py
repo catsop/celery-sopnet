@@ -12,7 +12,7 @@ def SliceGuarantorTask(config, x, y, z):
     Calls SliceGuarantor for a certain block. This task cannot fail (as long as
     there is enough space for the results).
     """
-    ps.setLogLevel(4)
+    ps.setLogLevel(3)
     x = int(x)
     y = int(y)
     z = int(z)
@@ -31,7 +31,7 @@ def SegmentGuarantorTask(config, x, y, z):
     slices. It re-queues itself after them. It thereby makes sure all required
     slices are available.
     """
-    ps.setLogLevel(4)
+    ps.setLogLevel(3)
     x = int(x)
     y = int(y)
     z = int(z)
@@ -63,7 +63,7 @@ def SolutionGuarantorTask(config, x, y, z):
     """
     Calls SolutionGuarantor for a certain core.
     """
-    ps.setLogLevel(4)
+    ps.setLogLevel(3)
     x = int(x)
     y = int(y)
     z = int(z)
