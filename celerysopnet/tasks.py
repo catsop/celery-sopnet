@@ -109,37 +109,27 @@ def create_project_config(config):
     This takes any dictionary and creates a real project configuration. This
     dictinary can have the following keys and values:
 
-        backend_type = [local|django]
+        backend_type = [local|postgresql]
         catmaid_host = [Host:port of CATMAID]
         catmaid_stack_id = [ID of the CATMAID stack in question]
         catmaid_project_id = [ID of the CATMAID project in question]
-        block_size = [3 element array for the block size]
-        volume_size = [3 element array for the volume size]
-        core_size = [3 element array for the core size]
+        block_size = [3 element array for the block size in voxels]
+        volume_size = [3 element array for the volume size in voxels]
+        core_size = [3 element array for the core size in blocks]
+        component_dir = [Path to connect component storage directory]
+        postgresql_host = [PostgreSQL host]
+        postgresql_port = [PostgreSQL port]
+        postgresql_user = [PostgreSQL user]
+        postgresql_password = [PostgreSQL password]
+        postgresql_database = [PostgreSQL database]
     """
     pc = ps.ProjectConfiguration()
 
     backend_type = config.get('backend_type', 'local')
-    if backend_type == 'django':
-        pc.setBackendType(ps.BackendType.Django)
+    if backend_type == 'postgresql':
+        pc.setBackendType(ps.BackendType.PostgreSql)
     else:
         pc.setBackendType(ps.BackendType.Local)
-
-    catmaid_host = config.get('catmaid_host')
-    if catmaid_host:
-        pc.setCatmaidHost(catmaid_host)
-
-    catmaid_raw_stack_id = config.get('catmaid_raw_stack_id')
-    if catmaid_raw_stack_id:
-        pc.setCatmaidRawStackId(int(catmaid_raw_stack_id))
-
-    catmaid_mem_stack_id = config.get('catmaid_membrane_stack_id')
-    if catmaid_mem_stack_id:
-        pc.setCatmaidMembraneStackId(int(catmaid_mem_stack_id))
-
-    catmaid_project_id = config.get('catmaid_project_id')
-    if catmaid_project_id:
-        pc.setCatmaidProjectId(int(catmaid_project_id))
 
     block_size = config.get('block_size')
     if block_size:
@@ -152,5 +142,23 @@ def create_project_config(config):
     core_size = config.get('core_size')
     if core_size:
         pc.setCoreSize(ps.point3(core_size[0], core_size[1], core_size[2]))
+
+    # Set the remaining parameters that do not require special handling.
+    param_mapping = [
+            {'name': 'catmaid_host', 'set': pc.setCatmaidHost, 'parse': str},
+            {'name': 'catmaid_raw_stack_id', 'set': pc.setCatmaidRawStackId, 'parse': int},
+            {'name': 'catmaid_membrane_stack_id', 'set': pc.setCatmaidMembraneStackId, 'parse': int},
+            {'name': 'catmaid_project_id', 'set': pc.setCatmaidProjectId, 'parse': int},
+            {'name': 'component_dir', 'set': pc.setComponentDirectory, 'parse': str},
+            {'name': 'postgresql_host', 'set': pc.setPostgreSqlHost, 'parse': str},
+            {'name': 'postgresql_port', 'set': pc.setPostgreSqlPort, 'parse': str},
+            {'name': 'postgresql_user', 'set': pc.setPostgreSqlUser, 'parse': str},
+            {'name': 'postgresql_password', 'set': pc.setPostgreSqlPassword, 'parse': str},
+            {'name': 'postgresql_database', 'set': pc.setPostgreSqlDatabase, 'parse': str}]
+    for param_map in param_mapping:
+        param_value = config.get(param_map['name'])
+        # Only set the parameter if it is specified in config
+        if param_value:
+            param_map['set'](param_map['parse'](param_value))
 
     return pc
