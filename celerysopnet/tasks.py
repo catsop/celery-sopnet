@@ -23,13 +23,13 @@ def SliceGuarantorTask(config, x, y, z):
     return "Created slice for (%s, %s, %s)" % (x, y, z)
 
 @app.task
-def SegmentGuarantorTask(config, x, y, z):
+def SegmentGuarantorTask(config, x, y, z, fulfill_preconditions=True):
     """
     Calls SegmentGuarantor for a certain block. If Sopnet returns with a
-    non-empty list, slices are missing for the segment to be generated. In this
+    non-empty list, required slices are missing for the requested block. In this
     case, this task will create a group of slice guarantor tasks for the missing
-    slices. It re-queues itself after them. It thereby makes sure all required
-    slices are available.
+    slices (if fulfill_preconditions is set). The task re-queues itself after
+    them. It thereby makes sure all required slices are available.
     """
     ps.setLogLevel(int(config.get('loglevel', 2)))
     x = int(x)
@@ -42,24 +42,26 @@ def SegmentGuarantorTask(config, x, y, z):
     required_slices = ps.SegmentGuarantor().fill(location, params, pconfig)
 
     # Fulfill preconditions, if any, before creating the segment
-    if required_slices:
-        # Create slice guarantor tasks for required slices
+    if fulfill_preconditions and required_slices:
+        # Create slice guarantor tasks for required blocks
         preconditions = [SliceGuarantorTask.s(config, rs.x, rs.y, rs.z) \
               for rs in required_slices]
-        # Create a list of the precdonditions' coordinats
+        # Create a list of the preconditions' coordinates
         precondition_coords = ["(%s, %s, %s)" % (rs.x, rs.y, rs.z) \
               for rs in required_slices]
-        # Run a celery chain that re-executes the slice guarantor request after
-        # the preconditions are met.
+        # Run a celery chain that re-executes the segment guarantor request
+        # after the preconditions are met.
         callback = SegmentGuarantorTask.si(config, x, y ,z)
         result = chord(preconditions)(callback)
         return "Queued %s slice guarantor tasks for positions: %s Chain ID: %s" \
                 % (len(required_slices), ", ".join(precondition_coords), result.task_id)
+    elif required_slices:
+        return "Preconditions not met for segments for block (%s, %s, %s)" % (x, y, z)
     else:
-        return "Created segment for (%s, %s, %s)" % (x, y, z)
+        return "Created segments for block (%s, %s, %s)" % (x, y, z)
 
 @app.task
-def SolutionGuarantorTask(config, x, y, z):
+def SolutionGuarantorTask(config, x, y, z, fulfill_preconditions=True):
     """
     Calls SolutionGuarantor for a certain core.
     """
@@ -73,22 +75,24 @@ def SolutionGuarantorTask(config, x, y, z):
     pconfig = create_project_config(config)
     required_segments = ps.SolutionGuarantor().fill(location, params, pconfig)
 
-    # Fulfill preconditions, if any, before creating the segment
-    if required_segments:
+    # Fulfill preconditions, if any, before solving the core
+    if fulfill_preconditions and required_segments:
         # Create slice guarantor tasks for required slices
         preconditions = [SegmentGuarantorTask.s(config, rs.x, rs.y, rs.z) \
               for rs in required_segments]
-        # Create a list of the precdonditions' coordinats
+        # Create a list of the preconditions' coordinates
         precondition_coords = ["(%s, %s, %s)" % (rs.x, rs.y, rs.z) \
               for rs in required_segments]
-        # Run a celery chain that re-executes the slice guarantor request after
-        # the preconditions are met.
+        # Run a celery chain that re-executes the solution guarantor request
+        # after the preconditions are met.
         callback = SolutionGuarantorTask.si(config, x, y, z)
         result = chord(preconditions)(callback)
         return "Queued %s segment guarantor tasks for positions %s Chain ID: %s " \
                 % (len(required_segments), ", ".join(precondition_coords), result.task_id)
+    elif required_segments:
+        return "Preconditions not met for solution for core (%s, %s, %s)" % (x, y, z)
     else:
-        return "Created solution"
+        return "Created solution for core (%s, %s, %s)" % (x, y, z)
 
 @app.task
 def SolveSubvolumeTask():
