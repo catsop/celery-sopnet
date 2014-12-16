@@ -149,6 +149,7 @@ def create_project_config(config):
             {'name': 'catmaid_raw_stack_id', 'set': pc.setCatmaidRawStackId, 'parse': int},
             {'name': 'catmaid_membrane_stack_id', 'set': pc.setCatmaidMembraneStackId, 'parse': int},
             {'name': 'catmaid_project_id', 'set': pc.setCatmaidProjectId, 'parse': int},
+            {'name': 'catmaid_stack_scale', 'set': pc.setCatmaidStackScale, 'parse': int},
             {'name': 'component_dir', 'set': pc.setComponentDirectory, 'parse': str},
             {'name': 'postgresql_host', 'set': pc.setPostgreSqlHost, 'parse': str},
             {'name': 'postgresql_port', 'set': pc.setPostgreSqlPort, 'parse': str},
