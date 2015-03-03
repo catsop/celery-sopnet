@@ -115,7 +115,8 @@ def create_project_config(config):
 
         backend_type = [local|postgresql]
         catmaid_host = [Host:port of CATMAID]
-        catmaid_stack_id = [ID of the CATMAID stack in question]
+        catmaid_stack_ids = [dict of stack type to ID of the stack and
+            segmentation stack]
         catmaid_project_id = [ID of the CATMAID project in question]
         block_size = [3 element array for the block size in voxels]
         volume_size = [3 element array for the volume size in voxels]
@@ -135,6 +136,15 @@ def create_project_config(config):
     else:
         pc.setBackendType(ps.BackendType.Local)
 
+    for stack_type, ids in config['catmaid_stack_ids'].iteritems():
+        stack_ids = ps.StackIds()
+        stack_ids.id = ids['id']
+        stack_ids.segmentation_id = ids['segmentation_id']
+        if stack_type == 'Raw':
+            pc.setCatmaidStackIds(ps.StackType.Raw, stack_ids)
+        elif stack_type == 'Membrane':
+            pc.setCatmaidStackIds(ps.StackType.Membrane, stack_ids)
+
     block_size = config.get('block_size')
     if block_size:
         pc.setBlockSize(ps.point3(block_size[0], block_size[1], block_size[2]))
@@ -150,8 +160,6 @@ def create_project_config(config):
     # Set the remaining parameters that do not require special handling.
     param_mapping = [
             {'name': 'catmaid_host', 'set': pc.setCatmaidHost, 'parse': str},
-            {'name': 'catmaid_raw_stack_id', 'set': pc.setCatmaidRawStackId, 'parse': int},
-            {'name': 'catmaid_membrane_stack_id', 'set': pc.setCatmaidMembraneStackId, 'parse': int},
             {'name': 'catmaid_project_id', 'set': pc.setCatmaidProjectId, 'parse': int},
             {'name': 'catmaid_stack_scale', 'set': pc.setCatmaidStackScale, 'parse': int},
             {'name': 'component_dir', 'set': pc.setComponentDirectory, 'parse': str},
