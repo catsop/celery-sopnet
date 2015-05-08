@@ -115,7 +115,6 @@ def create_project_config(config):
 
         backend_type = [local|postgresql]
         catmaid_stacks = [dict of stack type to dict description of the stack]
-        catmaid_project_id = [ID of the CATMAID project in question]
         block_size = [3 element array for the block size in voxels]
         volume_size = [3 element array for the volume size in voxels]
         core_size = [3 element array for the core size in blocks]
@@ -166,7 +165,6 @@ def create_project_config(config):
 
     # Set the remaining parameters that do not require special handling.
     param_mapping = [
-            {'name': 'catmaid_project_id', 'set': pc.setCatmaidProjectId, 'parse': int},
             {'name': 'component_dir', 'set': pc.setComponentDirectory, 'parse': str},
             {'name': 'postgresql_host', 'set': pc.setPostgreSqlHost, 'parse': str},
             {'name': 'postgresql_port', 'set': pc.setPostgreSqlPort, 'parse': str},
