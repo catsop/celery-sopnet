@@ -114,7 +114,6 @@ def create_project_config(config):
     dictinary can have the following keys and values:
 
         backend_type = [local|postgresql]
-        catmaid_host = [Host:port of CATMAID]
         catmaid_stacks = [dict of stack type to dict description of the stack]
         catmaid_project_id = [ID of the CATMAID project in question]
         block_size = [3 element array for the block size in voxels]
@@ -167,7 +166,6 @@ def create_project_config(config):
 
     # Set the remaining parameters that do not require special handling.
     param_mapping = [
-            {'name': 'catmaid_host', 'set': pc.setCatmaidHost, 'parse': str},
             {'name': 'catmaid_project_id', 'set': pc.setCatmaidProjectId, 'parse': int},
             {'name': 'component_dir', 'set': pc.setComponentDirectory, 'parse': str},
             {'name': 'postgresql_host', 'set': pc.setPostgreSqlHost, 'parse': str},
