@@ -7,23 +7,23 @@ from celerysopnet.celery import app
 import pysopnet as ps
 
 @app.task
-def SliceGuarantorTask(config, x, y, z):
+def SliceGuarantorTask(config, x, y, z, log_level=None):
     """
     Calls SliceGuarantor for a certain block. This task cannot fail (as long as
     there is enough space for the results).
     """
-    ps.setLogLevel(int(config.get('loglevel', 2)))
     x = int(x)
     y = int(y)
     z = int(z)
     location = ps.point3(x, y, z)
+    if log_level:
+        ps.setLogLevel(log_level)
     params = ps.SliceGuarantorParameters()
-    pconfig = create_project_config(config)
-    ps.SliceGuarantor().fill(location, params, pconfig)
+    ps.SliceGuarantor().fill(location, params, config)
     return "Created slice for (%s, %s, %s)" % (x, y, z)
 
 @app.task
-def SegmentGuarantorTask(config, x, y, z, fulfill_preconditions=True):
+def SegmentGuarantorTask(config, x, y, z, fulfill_preconditions=True, log_level=None):
     """
     Calls SegmentGuarantor for a certain block. If Sopnet returns with a
     non-empty list, required slices are missing for the requested block. In this
@@ -31,15 +31,15 @@ def SegmentGuarantorTask(config, x, y, z, fulfill_preconditions=True):
     slices (if fulfill_preconditions is set). The task re-queues itself after
     them. It thereby makes sure all required slices are available.
     """
-    ps.setLogLevel(int(config.get('loglevel', 2)))
     x = int(x)
     y = int(y)
     z = int(z)
     # Ask Sopnet for requested segment
     location = ps.point3(x, y, z)
+    if log_level:
+        ps.setLogLevel(log_level)
     params = ps.SegmentGuarantorParameters()
-    pconfig = create_project_config(config)
-    required_slices = ps.SegmentGuarantor().fill(location, params, pconfig)
+    required_slices = ps.SegmentGuarantor().fill(location, params, config)
 
     # Fulfill preconditions, if any, before creating the segment
     if fulfill_preconditions and required_slices:
@@ -58,19 +58,19 @@ def SegmentGuarantorTask(config, x, y, z, fulfill_preconditions=True):
         return "Created segments for block (%s, %s, %s)" % (x, y, z)
 
 @app.task
-def SolutionGuarantorTask(config, x, y, z, fulfill_preconditions=True):
+def SolutionGuarantorTask(config, x, y, z, fulfill_preconditions=True, log_level=None):
     """
     Calls SolutionGuarantor for a certain core.
     """
-    ps.setLogLevel(int(config.get('loglevel', 2)))
     x = int(x)
     y = int(y)
     z = int(z)
     # Ask Sopnet for requested solution
     location = ps.point3(x, y, z)
+    if log_level:
+        ps.setLogLevel(log_level)
     params = ps.SolutionGuarantorParameters()
-    pconfig = create_project_config(config)
-    required_segments = ps.SolutionGuarantor().fill(location, params, pconfig)
+    required_segments = ps.SolutionGuarantor().fill(location, params, config)
 
     # Fulfill preconditions, if any, before solving the core
     if fulfill_preconditions and required_segments:
@@ -101,74 +101,3 @@ def TraceNeuronTask():
     Actively follows the cores of a neuron around a requested point.
     """
     return "Finished tracing neuron"
-
-def create_project_config(config):
-    """
-    This takes any dictionary and creates a real project configuration. This
-    dictinary can have the following keys and values:
-
-        backend_type = [local|postgresql]
-        catmaid_stacks = [dict of stack type to dict description of the stack]
-        block_size = [3 element array for the block size in voxels]
-        volume_size = [3 element array for the volume size in voxels]
-        core_size = [3 element array for the core size in blocks]
-        component_dir = [Path to connect component storage directory]
-        postgresql_host = [PostgreSQL host]
-        postgresql_port = [PostgreSQL port]
-        postgresql_user = [PostgreSQL user]
-        postgresql_password = [PostgreSQL password]
-        postgresql_database = [PostgreSQL database]
-    """
-    pc = ps.ProjectConfiguration()
-
-    backend_type = config.get('backend_type', 'local')
-    if backend_type == 'postgresql':
-        pc.setBackendType(ps.BackendType.PostgreSql)
-    else:
-        pc.setBackendType(ps.BackendType.Local)
-
-    for stack_type, stack_dict in config['catmaid_stacks'].iteritems():
-        stack = ps.StackDescription()
-        stack.imageBase = stack_dict['image_base'].encode('utf8')
-        stack.extension = stack_dict['file_extension'].encode('utf8')
-        stack.tileSourceType = stack_dict['tile_source_type']
-        stack.tileWidth = stack_dict['tile_width']
-        stack.tileHeight = stack_dict['tile_height']
-        stack.width = stack_dict['width']
-        stack.height = stack_dict['height']
-        stack.depth = stack_dict['depth']
-        stack.scale = stack_dict['scale']
-        stack.id = stack_dict['id']
-        stack.segmentationId = stack_dict['segmentation_id']
-        if stack_type == 'Raw':
-            pc.setCatmaidStack(ps.StackType.Raw, stack)
-        elif stack_type == 'Membrane':
-            pc.setCatmaidStack(ps.StackType.Membrane, stack)
-
-    block_size = config.get('block_size')
-    if block_size:
-        pc.setBlockSize(ps.point3(block_size[0], block_size[1], block_size[2]))
-
-    volume_size = config.get('volume_size')
-    if volume_size:
-        pc.setVolumeSize(ps.point3(volume_size[0], volume_size[1], volume_size[2]))
-
-    core_size = config.get('core_size')
-    if core_size:
-        pc.setCoreSize(ps.point3(core_size[0], core_size[1], core_size[2]))
-
-    # Set the remaining parameters that do not require special handling.
-    param_mapping = [
-            {'name': 'component_dir', 'set': pc.setComponentDirectory, 'parse': str},
-            {'name': 'postgresql_host', 'set': pc.setPostgreSqlHost, 'parse': str},
-            {'name': 'postgresql_port', 'set': pc.setPostgreSqlPort, 'parse': str},
-            {'name': 'postgresql_user', 'set': pc.setPostgreSqlUser, 'parse': str},
-            {'name': 'postgresql_password', 'set': pc.setPostgreSqlPassword, 'parse': str},
-            {'name': 'postgresql_database', 'set': pc.setPostgreSqlDatabase, 'parse': str}]
-    for param_map in param_mapping:
-        param_value = config.get(param_map['name'])
-        # Only set the parameter if it is specified in config
-        if param_value:
-            param_map['set'](param_map['parse'](param_value))
-
-    return pc
