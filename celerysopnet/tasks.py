@@ -48,7 +48,7 @@ def SegmentGuarantorTask(config, x, y, z, fulfill_preconditions=True, log_level=
               for rs in required_slices]
         # Run a celery chain that re-executes the segment guarantor request
         # after the preconditions are met.
-        callback = SegmentGuarantorTask.si(config, x, y ,z)
+        callback = SegmentGuarantorTask.si(config, x, y, z)
         result = chord(preconditions)(callback)
         return "Queued %s slice guarantor tasks for positions: %s Chain ID: %s" \
                 % (len(required_slices), ", ".join(map(str, required_slices)), result.task_id)
