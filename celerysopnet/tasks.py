@@ -46,15 +46,12 @@ def SegmentGuarantorTask(config, x, y, z, fulfill_preconditions=True):
         # Create slice guarantor tasks for required blocks
         preconditions = [SliceGuarantorTask.s(config, rs.x, rs.y, rs.z) \
               for rs in required_slices]
-        # Create a list of the preconditions' coordinates
-        precondition_coords = ["(%s, %s, %s)" % (rs.x, rs.y, rs.z) \
-              for rs in required_slices]
         # Run a celery chain that re-executes the segment guarantor request
         # after the preconditions are met.
         callback = SegmentGuarantorTask.si(config, x, y ,z)
         result = chord(preconditions)(callback)
         return "Queued %s slice guarantor tasks for positions: %s Chain ID: %s" \
-                % (len(required_slices), ", ".join(precondition_coords), result.task_id)
+                % (len(required_slices), ", ".join(map(str, required_slices)), result.task_id)
     elif required_slices:
         return "Preconditions not met for segments for block (%s, %s, %s)" % (x, y, z)
     else:
@@ -80,15 +77,12 @@ def SolutionGuarantorTask(config, x, y, z, fulfill_preconditions=True):
         # Create slice guarantor tasks for required slices
         preconditions = [SegmentGuarantorTask.s(config, rs.x, rs.y, rs.z) \
               for rs in required_segments]
-        # Create a list of the preconditions' coordinates
-        precondition_coords = ["(%s, %s, %s)" % (rs.x, rs.y, rs.z) \
-              for rs in required_segments]
         # Run a celery chain that re-executes the solution guarantor request
         # after the preconditions are met.
         callback = SolutionGuarantorTask.si(config, x, y, z)
         result = chord(preconditions)(callback)
         return "Queued %s segment guarantor tasks for positions %s Chain ID: %s " \
-                % (len(required_segments), ", ".join(precondition_coords), result.task_id)
+                % (len(required_segments), ", ".join(map(str, required_segments)), result.task_id)
     elif required_segments:
         return "Preconditions not met for solution for core (%s, %s, %s)" % (x, y, z)
     else:
